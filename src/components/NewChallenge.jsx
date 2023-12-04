@@ -1,5 +1,5 @@
 import { useContext, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useAnimate, stagger } from 'framer-motion';
 
 import { ChallengesContext } from '../store/challenges-context.jsx';
 import Modal from './Modal.jsx';
@@ -9,6 +9,8 @@ export default function NewChallenge({ onDone }) {
   const title = useRef();
   const description = useRef();
   const deadline = useRef();
+
+  const [scope, animate] = useAnimate()
 
   const [selectedImage, setSelectedImage] = useState(null);
   const { addChallenge } = useContext(ChallengesContext);
@@ -32,6 +34,9 @@ export default function NewChallenge({ onDone }) {
       !challenge.deadline.trim() ||
       !challenge.image
     ) {
+      animate('input, textarea',
+       {x: [-10, 0, 10, 0]},
+       {type: 'spring', duration:.2, delay: stagger(.05)})
       return;
     }
 
@@ -41,7 +46,7 @@ export default function NewChallenge({ onDone }) {
 
   return (
     <Modal title="New Challenge" onClose={onDone}>
-      <form id="new-challenge" onSubmit={handleSubmit}>
+      <form id="new-challenge" onSubmit={handleSubmit} ref={scope}>
         <p>
           <label htmlFor="title">Title</label>
           <input ref={title} type="text" name="title" id="title" />
@@ -57,12 +62,16 @@ export default function NewChallenge({ onDone }) {
           <input ref={deadline} type="date" name="deadline" id="deadline" />
         </p>
 
-        <ul id="new-challenge-images">
+        <motion.ul
+          variants={{
+            visible: { transition: {staggerChildren: 0.05} }
+          }}
+          id="new-challenge-images">
           {images.map((image) => (
             <motion.li
               variants={{
                 hidden: {opacity: 0, scale:.5},
-                visible: {opacity: 1, scale: 1}
+                visible: {opacity: 1, scale: [.8, 1.3, 1]}
               }}
               exit={{opacity: 1, scale: 1}}
               transition={{type: 'spring'}}
@@ -73,7 +82,7 @@ export default function NewChallenge({ onDone }) {
               <img {...image} />
             </motion.li>
           ))}
-        </ul>
+        </motion.ul>
 
         <p className="new-challenge-actions">
           <button type="button" onClick={onDone}>
